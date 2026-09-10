@@ -33,11 +33,18 @@ type DatabaseConfig struct {
 	ConnectTimeout  time.Duration `mapstructure:"connect_timeout"`
 }
 
+const (
+	DefaultMaxAttachmentSize      = 10 * 1024 * 1024 // 10MB, per attachment
+	DefaultMaxTotalAttachmentSize = 18 * 1024 * 1024 // 18MB, sum of all attachments
+)
+
 type EmailConfig struct {
-	Port     int    `mapstructure:"port"`
-	Host     string `mapstructure:"host"`
-	UserName string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
+	Port                   int    `mapstructure:"port"`
+	Host                   string `mapstructure:"host"`
+	UserName               string `mapstructure:"username"`
+	Password               string `mapstructure:"password"`
+	MaxAttachmentSize      int64  `mapstructure:"max_attachment_size"`
+	MaxTotalAttachmentSize int64  `mapstructure:"max_total_attachment_size"`
 }
 
 type NatsConfig struct {

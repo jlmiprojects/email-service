@@ -2,7 +2,7 @@
 BINARY=email-service
 GOOS=linux
 GOARCH=amd64
-DOCKER_HUB=ghcr.io/selftrack
+DOCKER_HUB=ghcr.io/blueasset
 
 # These are the values we want to pass for VERSION and BUILD
 VERSION=`git describe --tags --always --dirty`

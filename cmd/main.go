@@ -88,6 +88,13 @@ func setupConfig() *models.Config {
 		log.Fatalf("Unable to decode into struct: %v", err)
 	}
 
+	if config.Email.MaxAttachmentSize <= 0 {
+		config.Email.MaxAttachmentSize = models.DefaultMaxAttachmentSize
+	}
+	if config.Email.MaxTotalAttachmentSize <= 0 {
+		config.Email.MaxTotalAttachmentSize = models.DefaultMaxTotalAttachmentSize
+	}
+
 	return &config
 
 }

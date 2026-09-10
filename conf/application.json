@@ -1,7 +1,7 @@
 {
     "mongo":{
         "uri":"mongodb://localhost:27017/?maxPoolSize=20&write=majority",
-        "database":"broker-portal",
+        "database":"broker_portal",
         "email_table":"email",
         "read_timeout":"1s",
         "write_timeout":"1s",
@@ -12,7 +12,7 @@
         "type":"JSON",
         "level":"DEBUG"
     },
-    "templates" : "/Users/oosthuja/Development/blueassetgroup.com/broker-portal/email/templates",
+    "templates" : "/Users/oosthuja/Development/blueassetgroup.com/email-service/templates",
     "nats":{
         "uri":"nats://localhost:4222",
         "token":"s3cr3t"
@@ -21,6 +21,8 @@
         "host":"smtp.gmail.com",
         "port":587,
         "username":"jacques.oosthuizen@jlmiprojects.co.za",
-        "password":"iilb bmyr hbnh zvve"
+        "password":"iilb bmyr hbnh zvve",
+        "max_attachment_size": 10485760,
+        "max_total_attachment_size": 18874368
     }
 }

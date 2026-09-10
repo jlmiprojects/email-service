@@ -3,7 +3,9 @@ package handlers
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"html/template"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -86,6 +88,15 @@ func (handler Handler) Send(req micro.Request) {
 
 		}
 
+		if err := handler.validateAttachments(request.Attachments); err != nil {
+			logger.Error("Attachment Validation Failed", "error", err)
+			return req.RespondJSON(&models.Result{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Attachment Validation Failed",
+				Error:      err.Error(),
+			})
+		}
+
 		var tpl bytes.Buffer
 
 		if request.Data == nil {
@@ -112,15 +123,27 @@ func (handler Handler) Send(req micro.Request) {
 			}
 		}
 
-		email := models.Email{
-			To:        request.To,
-			From:      request.From,
-			Subject:   request.Subject,
-			Timestamp: time.Now(),
-			Template:  tpl.String(), Data: request.Data,
+		persistedAttachments := make([]models.Attachment, len(request.Attachments))
+		for i, a := range request.Attachments {
+			persistedAttachments[i] = models.Attachment{
+				Filename:    a.Filename,
+				ContentType: a.ContentType,
+				Size:        int64(len(a.Content)),
+				// Content intentionally omitted - raw bytes are not persisted.
+			}
 		}
 
-		err = handler.sendMail(request.From, request.To, request.Subject, tpl.String())
+		email := models.Email{
+			To:          request.To,
+			From:        request.From,
+			Subject:     request.Subject,
+			Timestamp:   time.Now(),
+			Template:    tpl.String(),
+			Data:        request.Data,
+			Attachments: persistedAttachments,
+		}
+
+		err = handler.sendMail(request.From, request.To, request.Subject, tpl.String(), request.Attachments)
 
 		if err != nil {
 			return req.RespondJSON(models.Result{
@@ -145,11 +168,11 @@ func (handler Handler) Send(req micro.Request) {
 
 }
 
-func (handler Handler) sendMail(from string, to []string, subject string, message string) error {
+func (handler Handler) sendMail(from string, to []string, subject string, message string, attachments []models.Attachment) error {
 
 	slog.Info("Sending Email", "host", handler.config.Email.Host,
 		"port", handler.config.Email.Port,
-		"from", from, "to", to, "subject", subject, "message", message)
+		"from", from, "to", to, "subject", subject, "attachments", len(attachments))
 
 	d := gomail.NewDialer(handler.config.Email.Host, handler.config.Email.Port,
 		handler.config.Email.UserName, handler.config.Email.Password)
@@ -163,6 +186,22 @@ func (handler Handler) sendMail(from string, to []string, subject string, messag
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", message)
 
+	for _, a := range attachments {
+		content := a.Content
+		settings := []gomail.FileSetting{
+			gomail.SetCopyFunc(func(w io.Writer) error {
+				_, err := w.Write(content)
+				return err
+			}),
+		}
+		if a.ContentType != "" {
+			settings = append(settings, gomail.SetHeader(map[string][]string{
+				"Content-Type": {a.ContentType},
+			}))
+		}
+		m.Attach(a.Filename, settings...)
+	}
+
 	if err := d.DialAndSend(m); err != nil {
 		slog.Error("Failed to send email", "error", err)
 		return err
@@ -170,4 +209,23 @@ func (handler Handler) sendMail(from string, to []string, subject string, messag
 
 	return nil
 
+}
+
+func (handler Handler) validateAttachments(attachments []models.Attachment) error {
+	maxEach := handler.config.Email.MaxAttachmentSize
+	maxTotal := handler.config.Email.MaxTotalAttachmentSize
+
+	var total int64
+	for _, a := range attachments {
+		size := int64(len(a.Content))
+		if size > maxEach {
+			return fmt.Errorf("attachment %q: %d bytes exceeds max attachment size of %d bytes", a.Filename, size, maxEach)
+		}
+		total += size
+	}
+	if total > maxTotal {
+		return fmt.Errorf("total attachment size %d bytes exceeds max of %d bytes", total, maxTotal)
+	}
+
+	return nil
 }

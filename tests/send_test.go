@@ -135,6 +135,33 @@ func TestSendEmail_DefaultTemplate(t *testing.T) {
 	}
 }
 
+func TestSendEmail_WithAttachment(t *testing.T) {
+	nc := connect(t)
+
+	from := testAddr("EMAIL_TEST_FROM", "jacques@blueassetgroup.com")
+	to := testAddr("EMAIL_TEST_TO", "jacques@blueassetgroup.com")
+
+	result := send(t, nc, models.Email{
+		From:    from,
+		To:      []string{to},
+		Subject: "Broker portal email service - attachment test",
+		Attachments: []models.Attachment{
+			{
+				Filename:    "note.txt",
+				ContentType: "text/plain",
+				Content:     []byte("hello from the email-service attachment test\n"),
+			},
+		},
+	})
+
+	if result.Error != "" {
+		t.Fatalf("service returned error: %s (%s)", result.Error, result.Message)
+	}
+	if result.StatusCode != 0 && result.StatusCode != 200 {
+		t.Fatalf("unexpected status code %d: %s", result.StatusCode, result.Message)
+	}
+}
+
 // The templates the broker portal (ui/services/email.go) sends by name.
 func TestSendEmail_BrokerPortalTemplates(t *testing.T) {
 	nc := connect(t)
@@ -163,6 +190,18 @@ func TestSendEmail_BrokerPortalTemplates(t *testing.T) {
 				"username":      "jbloggs",
 				"temp_password": "Zq4-Lm8Rb1",
 				"login_url":     "http://localhost:8888/",
+			},
+		},
+		{
+			name:    "quote_accept_invite",
+			subject: "Broker portal - quote_accept_invite template test",
+			data: map[string]any{
+				"client_name":  "Jane Client",
+				"advisor_name": "Alex Advisor",
+				"plan_name":    "Retirement Annuity",
+				"amount":       "R 1,500.00",
+				"accept_url":   "http://localhost:8888/q/test-token",
+				"expires_at":   "17 Sep 2026",
 			},
 		},
 	}
