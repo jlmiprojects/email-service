@@ -2,7 +2,7 @@
 BINARY=email-service
 GOOS=linux
 GOARCH=amd64
-DOCKER_HUB=ghcr.io/blueasset
+DOCKER_HUB=ghcr.io/jlmiprojects
 
 # These are the values we want to pass for VERSION and BUILD
 VERSION=`git describe --tags --always --dirty`
@@ -34,11 +34,24 @@ clean:
 prepare:
 	mkdir -p builds/${VERSION}
 
-docker: build
-	docker build --build-arg version=${VERSION} --build-arg ms=${BINARY} -t ${DOCKER_HUB}/${BINARY}:${VERSION} .
-	docker push ${DOCKER_HUB}/${BINARY}:${VERSION}
+# The Dockerfile builds the binary itself (no host build needed first) — see
+# its header comment. VERSION/BUILD_SHA are passed through so the shipped
+# binary reports the right version instead of always "0.0.0".
+# PLATFORM is the *deploy target*, not the build host. A plain `docker build`
+# produces an image for whatever architecture the builder is, so an Apple
+# Silicon machine yields linux/arm64 — which the x86 servers refuse to start
+# with "exec format error". Override for another target, or pass a list for a
+# multi-arch manifest:
+#   make docker PLATFORM=linux/amd64,linux/arm64
+PLATFORM?=linux/amd64
 
+# buildx --push rather than build-then-push: a cross-platform image cannot be
+# loaded into the local docker image store, so it goes straight to the registry.
+docker:
+	docker buildx build --platform ${PLATFORM} --build-arg VERSION=${VERSION} --build-arg BUILD_SHA=${BUILD} -t ${DOCKER_HUB}/${BINARY}:${VERSION} --push .
 
-docker-prod: build
-	docker build --build-arg version=${VERSION} --build-arg ms=${BINARY} -t ${DOCKER_HUB}/${BINARY}:latest .
-	docker push ${DOCKER_HUB}/${BINARY}:latest
+docker-prod:
+	docker buildx build --platform ${PLATFORM} --build-arg VERSION=${VERSION} --build-arg BUILD_SHA=${BUILD} -t ${DOCKER_HUB}/${BINARY}:latest --push .
+
+run:
+	go run cmd/main.go

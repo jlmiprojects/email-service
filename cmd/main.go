@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 
 	"blueassetgroup.com/email-service/handlers"
 	"blueassetgroup.com/email-service/models"
@@ -76,6 +77,9 @@ func setupConfig() *models.Config {
 	viper.AddConfigPath("../conf")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("/etc") // Look for the file in the working directory
+
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// 2. Read the configuration file
 	if err := viper.ReadInConfig(); err != nil {

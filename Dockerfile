@@ -1,16 +1,17 @@
-# Run Stage
-FROM alpine:3.15.4
+# ghcr/production build: see the Makefile's `docker`/`docker-prod` targets.
+# `Dockerfile.local` is the near-identical copy
+# broker-portal/deploy/docker-compose.yml builds from.
+FROM golang:1.22-alpine AS build
+ARG VERSION=0.0.0
+ARG BUILD_SHA=unknown
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.ServiceVersion=${VERSION} -X main.Build=${BUILD_SHA}" -o /out/email-service ./cmd/main.go
 
-ARG version
-
-# Set environment variable
-ENV APP_NAME email-service
-
-# Copy only required data into this image
-COPY ./builds/$version/$APP_NAME .
-
+FROM alpine:3
+WORKDIR /app
+COPY --from=build /out/email-service /app/email-service
 VOLUME ["/templates"]
-
-
-# Start app
-CMD ./$APP_NAME
+CMD ["/app/email-service"]
