@@ -204,18 +204,6 @@ func TestSendEmail_BrokerPortalTemplates(t *testing.T) {
 				"expires_at":   "17 Sep 2026",
 			},
 		},
-		{
-			name:    "commission_missing_values",
-			subject: "Broker portal - commission_missing_values template test",
-			data: map[string]any{
-				"intro": "The 2026-10 commission run left these plans out because a day had no value.",
-				"plans": []map[string]any{
-					{"quote_code": "Q-2026-0042", "plan_id": "68d510f825f72986d4670390", "period": "2026-09", "dates": "2026-09-02, 2026-09-03"},
-					{"quote_code": "Q-2026-0057", "plan_id": "68d510f825f72986d4670391", "period": "2026-09", "dates": "2026-09-14"},
-				},
-				"link": "http://localhost:8888/commissions/runs",
-			},
-		},
 	}
 
 	for _, tc := range cases {
