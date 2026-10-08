@@ -51,6 +51,8 @@
                 </div>
                 {{end}}
 
+                {{if .reason}}<p><strong>Their reason:</strong> {{.reason}}</p>{{end}}
+
                 {{if .quote_attached}}<p>The quote is attached as a PDF.</p>{{end}}
 
                 <p class="note">You may want to follow up with your client to understand their decision.</p>
