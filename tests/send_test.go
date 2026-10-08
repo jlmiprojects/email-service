@@ -204,6 +204,48 @@ func TestSendEmail_BrokerPortalTemplates(t *testing.T) {
 				"expires_at":   "17 Sep 2026",
 			},
 		},
+		{
+			name:    "support_ticket_created",
+			subject: "Broker portal - support_ticket_created template test",
+			data: map[string]any{
+				"recipient_name": "Lerato Mokoena",
+				"ticket_code":    "T-2026-0014",
+				"subject":        "Recurring commission missing for September",
+				"status":         "Waiting on you",
+				"by_name":        "Thandi Dlamini",
+				"body":           "Lerato changed T-2026-0014 to Resolved.",
+				"excerpt":        "The September statement has no recurring line for Q-2026-0030.",
+				"link":           "http://localhost:8888/home?open=%2Fsupport%2Ftest",
+			},
+		},
+		{
+			name:    "support_ticket_reply",
+			subject: "Broker portal - support_ticket_reply template test",
+			data: map[string]any{
+				"recipient_name": "Lerato Mokoena",
+				"ticket_code":    "T-2026-0014",
+				"subject":        "Recurring commission missing for September",
+				"status":         "Waiting on you",
+				"by_name":        "Thandi Dlamini",
+				"body":           "Lerato changed T-2026-0014 to Resolved.",
+				"excerpt":        "The September statement has no recurring line for Q-2026-0030.",
+				"link":           "http://localhost:8888/home?open=%2Fsupport%2Ftest",
+			},
+		},
+		{
+			name:    "support_ticket_status",
+			subject: "Broker portal - support_ticket_status template test",
+			data: map[string]any{
+				"recipient_name": "Lerato Mokoena",
+				"ticket_code":    "T-2026-0014",
+				"subject":        "Recurring commission missing for September",
+				"status":         "Waiting on you",
+				"by_name":        "Thandi Dlamini",
+				"body":           "Lerato changed T-2026-0014 to Resolved.",
+				"excerpt":        "The September statement has no recurring line for Q-2026-0030.",
+				"link":           "http://localhost:8888/home?open=%2Fsupport%2Ftest",
+			},
+		},
 	}
 
 	for _, tc := range cases {
